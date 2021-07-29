@@ -13,11 +13,11 @@ public class AppLog {
 
     @Before("execution(public void com.arturios.market.services.ShoppingCartService.addToCart())")
     public void simlMetodBef(){
-        System.out.println("Начало");
+        System.out.println("Начало ");
     }
 
     @After("execution(public void com.arturios.market.services.ShoppingCartService.addToCart())")
     public void simlMetodAf(){
-        System.out.println("Окончание");
+        System.out.println("Окончание ");
     }
 }
