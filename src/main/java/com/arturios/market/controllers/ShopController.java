@@ -1,8 +1,7 @@
 package com.arturios.market.controllers;
 
+import com.arturios.market.entites.*;
 import com.arturios.market.entites.Order;
-import com.arturios.market.entites.Product;
-import com.arturios.market.entites.User;
 import com.arturios.market.repositories.specifications.ProductSpecs;
 import com.arturios.market.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -27,6 +27,7 @@ public class ShopController {
     private OrderService orderService;
     private ProductService productService;
     private ShoppingCartService shoppingCartService;
+    private DeliveryAddressService deliverAddressService;
 
     @Autowired
     public void setProductService(ProductService productService) {
@@ -46,6 +47,10 @@ public class ShopController {
     @Autowired
     public void setOrderService(OrderService orderService) {
         this.orderService = orderService;
+    }
+    @Autowired
+    public void setDeliverAddressService(DeliveryAddressService deliverAddressService) {
+        this.deliverAddressService = deliverAddressService;
     }
 
     @GetMapping
@@ -93,6 +98,19 @@ public class ShopController {
         return "redirect:" + referrer;
     }
 
+    @GetMapping("/order/fill")
+    public String orderFill(Model model, HttpServletRequest httpServletRequest, Principal principal) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
+        User user = userService.findByUserName(principal.getName());
+        Order order = orderService.makeOrder(shoppingCartService.getCurrentCart(httpServletRequest.getSession()), user);
+        List<DeliveryAddress> deliveryAddresses = deliverAddressService.getUserAddresses(user.getId());
+        model.addAttribute("order", order);
+        model.addAttribute("deliveryAddresses", deliveryAddresses);
+        return "order-filler";
+    }
+
     @PostMapping("/order/confirm")
     public String orderConfirm(Model model, HttpServletRequest httpServletRequest, @ModelAttribute(name = "order") Order orderFromFrontend, Principal principal) {
         if (principal == null) {
@@ -100,6 +118,7 @@ public class ShopController {
         }
         User user = userService.findByUserName(principal.getName());
         Order order = orderService.makeOrder(shoppingCartService.getCurrentCart(httpServletRequest.getSession()), user);
+        order.setDeliveryAddress(orderFromFrontend.getDeliveryAddress());
         order.setPhoneNumber(orderFromFrontend.getPhoneNumber());
         order.setDeliveryDate(LocalDateTime.now().plusDays(7));
         order.setDeliveryPrice(0.0);

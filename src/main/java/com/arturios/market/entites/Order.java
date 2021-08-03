@@ -35,6 +35,10 @@ public class Order {
     @Column(name = "delivery_price")
     private Double deliveryPrice;
 
+    @ManyToOne
+    @JoinColumn(name = "delivery_address_id")
+    private DeliveryAddress deliveryAddress;
+
     @Column(name = "phone_number")
     private String phoneNumber;
 
